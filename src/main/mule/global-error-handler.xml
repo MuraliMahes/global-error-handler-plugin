@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<error-handler name="global-error-handler" doc:id="6f73ac52-780e-4e0f-9726-281f064ac210" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e14ecc96-194b-4787-84d5-a8701a11a78b" >
+			<set-variable value='#[output application/json&#10;---&#10;if(write(error.errorType,"application/java") contains "NOT_FOUND") 404&#10;else if(write(error.errorType,"application/java") contains "BAD_REQUEST") 400&#10;else if(write(error.errorType,"application/java") contains "METHOD_NOT_ALLOWED") 405&#10;else if(write(error.errorType,"application/java") contains "UNSUPPORTED_MEDIA_TYPE") 415&#10;else if(write(error.errorType,"application/java") contains "UNAUTHORIZED") 401&#10;else 500]' doc:name="Set ErrorCode" doc:id="8a23ca8f-0152-4365-9166-e1c7bc65681f" variableName="errorCode"/>
+			<logger level="ERROR" doc:name="Log Error" doc:id="81db0334-3ffa-4ca5-bca7-7e04d37ef78b" message="#[output application/json&#10;import * from logging&#10;---&#10;errorLog(vars.appName,vars.flowName,&quot;ERROR&quot;, vars.correlationId, vars.uniqueId, vars.transactionType, vars.errorCode, write(error.errorType,'application/java'), error.description)]" />
+			<ee:transform doc:name="Set Response payload" doc:id="210be051-4879-46eb-a88e-2af180f7ae7a" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"appName": app.name,
+	"logLevel": "ERROR",
+	"correlationId": vars.correlationId default correlationId,
+	"uniqueId": vars.uniqueId default {},
+	"transactionType": vars.transactionType default "",
+	"errorCode": vars.errorCode, 
+	"errorType": error.errorType, 
+	"errorDescription": error.description
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+        
+</error-handler>
+
+</mule>
