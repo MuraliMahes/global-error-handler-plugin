@@ -13,9 +13,9 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e14ecc96-194b-4787-84d5-a8701a11a78b" >
 			<set-variable value='#[output application/json&#10;---&#10;if(write(error.errorType,"application/java") contains "NOT_FOUND") 404&#10;else if(write(error.errorType,"application/java") contains "BAD_REQUEST") 400&#10;else if(write(error.errorType,"application/java") contains "METHOD_NOT_ALLOWED") 405&#10;else if(write(error.errorType,"application/java") contains "UNSUPPORTED_MEDIA_TYPE") 415&#10;else if(write(error.errorType,"application/java") contains "UNAUTHORIZED") 401&#10;else 500]' doc:name="Set ErrorCode" doc:id="8a23ca8f-0152-4365-9166-e1c7bc65681f" variableName="errorCode"/>
 			<logger level="ERROR" doc:name="Log Error" doc:id="81db0334-3ffa-4ca5-bca7-7e04d37ef78b" message="#[output application/json&#10;import * from logging&#10;---&#10;errorLog(vars.appName,vars.flowName,&quot;ERROR&quot;, vars.correlationId, vars.uniqueId, vars.transactionType, vars.errorCode, write(error.errorType,'application/java'), error.description)]" />
-			<ee:transform doc:name="Set Response payload" doc:id="210be051-4879-46eb-a88e-2af180f7ae7a" >
-				<ee:message >
-					<ee:set-payload ><![CDATA[%dw 2.0
+			<ee:transform doc:name="Set Response payload" doc:id="210be051-4879-46eb-a88e-2af180f7ae7a">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
@@ -25,7 +25,7 @@ output application/json
 	"uniqueId": vars.uniqueId default {},
 	"transactionType": vars.transactionType default "",
 	"errorCode": vars.errorCode, 
-	"errorType": error.errorType, 
+	"errorType": write(error.errorType,"application/java"), 
 	"errorDescription": error.description
 }]]></ee:set-payload>
 				</ee:message>
